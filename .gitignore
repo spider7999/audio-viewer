@@ -1,0 +1,13 @@
+
+# vscode
+.vscode/
+
+# idea
+.idea/
+*.iml
+
+# node
+node_modules/
+
+# compare
+dist/

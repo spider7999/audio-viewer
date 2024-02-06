@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+		<script src="../dist/index.js" type="text/javascript" charset="utf-8"></script>
+		<link rel="stylesheet" href="./css/bootstrap.min.css">
+		<!-- <link rel="stylesheet" href="./css/common.css"> -->
+		<style type="text/css">
+			html,
+			body {
+				height: 100vh;
+				margin: 0 4px;
+			}
+			div {
+				display: flex;
+				padding-top: 20px;
+			}
+			input[type="file"] {
+				width: 400px;
+				display: inline;
+			}
+			button {
+				width: 100px;
+				margin-left: 10px;
+			}
+			#canvas {
+				border: 1px solid #17A2B8;
+				width: 100%;
+				height: calc(50% - 100px);
+				margin-top: 10px;
+			}
+		</style>
+	</head>
+	<body>
+		<div>
+			<input id="audio-file" class="form-control" type="file" name="" value="" />
+			<button class="btn btn-primary" type="button" onclick="load()">加载</button>
+			<button class="btn btn-success" type="button" onclick="play()">播放</button>
+			<button class="btn btn-warning" type="button" onclick="stop()">暂停</button>
+		</div>
+		<canvas id="canvas"></canvas>
+	</body>
+	<script type="text/javascript">
+		var audioViewer = null;
+		window.onload = function() {
+			audioViewer = new AudioViewer({
+				canvas: document.getElementById('canvas')
+			})
+		}
+		function load() {
+			let inputFile = document.getElementById('audio-file');
+			let files = inputFile.files;
+			if (files.length > 0) {
+				let file = files[0];
+				audioViewer.loadFile(file);
+			}
+		}
+		
+		function play() {
+			audioViewer.play();
+		}
+		
+		function stop() {
+			audioViewer.pause();
+		}
+	</script>
+</html>

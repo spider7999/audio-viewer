@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+		<style type="text/css">
+			html,
+			body {
+				height: 100vh;
+				margin: 0 4px;
+			}
+
+			#audio-url {
+				width: 245px;
+			}
+
+			#canvas {
+				border: 1px solid #17A2B8;
+				width: 100%;
+				height: calc(50% - 100px);
+			}
+
+			#canvas-spec {
+				border: 1px solid #17A2B8;
+				width: 100%;
+				height: 20%;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="">
+			<div class="">
+				<input type="file" name="" id="audio-file" value="" />
+				<button type="button" id="load">加载</button>
+			</div>
+			<div class="">
+				<input type="text" name="" id="audio-url" value="" />
+				<button type="button" id="loadFromRemote">远程加载</button>
+			</div>
+			<div class="">
+				<button type="button" id="reset">复位</button>
+				<input type="text" name="" id="play_start" value="" placeholder="开始时间" />
+				<input type="text" name="" id="play_end" value="" placeholder="结束时间" />
+				<button type="button" id="play2">播放当前区域</button>
+				<button type="button" id="play3">播放所有区域</button>
+				<button type="button" id="initRegions">设置区域</button>
+				<button type="button" id="edit">裁剪</button>
+				<button type="button" id="play">播放</button>
+				<button type="button" id="stop">暂停</button>
+				<input type="range" id="volumeCtrl" min="0" max="100" value="100" />
+			</div>
+			<div class="">
+				<input type="number" name="" id="audio-channel" value="0" />
+				<button type="button" id="getChannelData">提取音轨</button>
+			</div>
+		</div>
+		<div class="">
+			采样率：<label id="sampleRate"></label>
+			时长：<label id="duration"></label>
+			通道数：<label id="numberOfChannels"></label>
+		</div>
+
+		<canvas id="canvas"></canvas>
+		<canvas id="canvas-spec"></canvas>
+	</body>
+	<script src="../dist/index.js"></script>
+	<script type="text/javascript">
+		var audioViewer = null;
+		var ws = null;
+		window.onload = function() {
+			audioViewer = new AudioViewer({
+				canvas: document.getElementById('canvas'),
+				// waveColor: '#000',
+				// waveBarGap: 2,
+				// waveBarWidth: 3,
+				// waveBarCap: 'round',
+				// playOnly: true,
+				autoLoop: true,
+				seekToStartOnEnd: false,
+				// volume: 0.2,
+				// displayTimeLine: false,
+				// displayLoadProgress: false,
+				// displayAllChannel: false,
+				// displayPlayOverlay: true,
+				// ,fileUrl: "http://192.168.0.112:8090/original/a001.wav"
+				// ,regions: [{startTime: 10, endTime: 20}, {startTime: 50, endTime: 70}],
+				plugins: [
+					new Spectrogram({canvas: document.getElementById('canvas-spec')})
+				]
+			})
+			document.getElementById('load').onclick = loadFromLocal;
+			document.getElementById('loadFromRemote').onclick = loadFromRemote;
+			document.getElementById('play2').onclick = play2;
+			document.getElementById('play3').onclick = play3;
+			document.getElementById('initRegions').onclick = initRegions;
+			document.getElementById('edit').onclick = edit;
+			document.getElementById('play').onclick = play;
+			document.getElementById('stop').onclick = stop;
+			document.getElementById('reset').onclick = reset;
+			document.getElementById('volumeCtrl').oninput = volumeChange;
+			document.getElementById('getChannelData').onclick = getChannelData;
+		}
+		window.addEventListener("keypress", (e) => {
+			if (e.keyCode == 32 && audioViewer) {
+				audioViewer.toggle();
+			}
+		});
+		// http://192.168.0.112:8090/test.wav
+		function loadFromRemote() {
+			let inputFile = document.getElementById('audio-url');
+			audioViewer.loadUrl(inputFile.value, null, () => {
+				alert("文件解析失败.");
+			});
+		}
+
+		function loadFromLocal(no) {
+			console.log(10000);
+			let inputFile = document.getElementById('audio-file');
+			let files = inputFile.files;
+			if (files.length > 0) {
+				let file = files[0];
+				audioViewer.loadFile(file, () => {
+					let audioInfo = audioViewer.getAudioInfo();
+					document.getElementById('sampleRate').innerHTML = audioInfo.sampleRate;
+					document.getElementById('duration').innerHTML = audioInfo.duration;
+					document.getElementById('numberOfChannels').innerHTML = audioInfo.numberOfChannels;
+				}, () => {
+					alert("文件解析失败.");
+				});
+				if (audioViewer1) {
+					audioViewer1.loadFile(file);
+				}
+			}
+		}
+
+		function reset(no) {
+			audioViewer.reset()
+		}
+
+		function play2() {
+			console.log("play2");
+			let region = audioViewer.getCurrentRegion();
+			if (region) {
+				console.log(region);
+				document.getElementById('play_start').value = region.startTime;
+				document.getElementById('play_end').value = region.endTime;
+			}
+			audioViewer.playCurrentRegion();
+		}
+
+		function play(no) {
+			audioViewer.play();
+		}
+
+		function stop(no) {
+			audioViewer.pause();
+		}
+
+		function play3() {
+			audioViewer.playRegions();
+		}
+
+		function edit() {
+			let newBlob = audioViewer.editRegions();
+			let url = URL.createObjectURL(newBlob);
+			console.log(url);
+			let a = document.createElement('a');
+			a.href = url;
+			a.download = 'aaaa.wav';
+			a.click();
+			URL.revokeObjectURL(a.href);
+			a.remove();
+		}
+
+		function initRegions() {
+			let regions = [{
+					startTime: 10,
+					endTime: 15
+				},
+				{
+					startTime: 19.259,
+					endTime: 23.762
+				}
+			]
+			audioViewer.initRegions(regions);
+		}
+
+		function volumeChange(e) {
+			audioViewer.setVolume(e.target.value / 100);
+		}
+
+		function getChannelData() {
+			let audioChannel = document.getElementById('audio-channel');
+			let newBlob = audioViewer.getChannelData(audioChannel.value);
+			console.log(newBlob)
+			let url = URL.createObjectURL(newBlob);
+			console.log(url);
+			let a = document.createElement('a');
+			a.href = url;
+			a.download = 'aaaa.wav';
+			a.click();
+			URL.revokeObjectURL(a.href);
+			a.remove();
+		}
+	</script>
+</html>

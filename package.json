@@ -1,0 +1,29 @@
+{
+  "name": "audioviewer",
+  "version": "1.0.0",
+  "description": "",
+  "main": "./dist/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "webpack",
+    "build-commonjs": "webpack --config ./build-config/commonjs.config.js",
+    "build-test": "webpack --config ./build-config/test.config.js"
+  },
+  "keywords": [
+    "audio",
+    "wave-displayer"
+  ],
+  "author": "scott wang",
+  "license": "GPL",
+  "files": [
+    "dist"
+  ],
+  "devDependencies": {
+    "@babel/core": "^7.18.2",
+    "@babel/preset-env": "^7.18.2",
+    "babel-loader": "^8.2.5",
+    "html-webpack-plugin": "^5.5.0",
+    "webpack": "^5.72.1",
+    "webpack-cli": "^4.9.2"
+  }
+}
